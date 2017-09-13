@@ -100,6 +100,7 @@ class Ssh_execute {
     public function cmd ( $cmd, $returnOutput = false ) {
         $this->logAction ( "Executing command $cmd" );
         $this->stream = ssh2_exec ( $this->conn, $cmd );
+		$this->error = ssh2_fetch_stream( $this->stream, SSH2_STREAM_STDERR );
 
         if ( FALSE === $this->stream ) {
             $this->logAction ( "Unable to execute command $cmd" );
@@ -107,14 +108,17 @@ class Ssh_execute {
         }
         $this->logAction ( "$cmd was executed" );
 
+        stream_set_blocking ( $this->error, true );
         stream_set_blocking ( $this->stream, true );
-        stream_set_timeout ( $this->stream, $this->stream_timeout );
         $this->lastLog = stream_get_contents ( $this->stream );
-
+        $this->lastLog = stream_get_contents ( $this->error );
+		
         $this->logAction ( "$cmd output: {$this->lastLog}" );
         fclose ( $this->stream );
-        $this->log .= $this->lastLog . "\n";
+        fclose ( $this->error );
+        $this->log .= $this->lastLog;
         return ( $returnOutput ) ? $this->lastLog : $this;
+
     }
 
     public function shellCmd ( $cmds = array () ) {

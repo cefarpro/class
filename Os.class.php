@@ -911,11 +911,11 @@ class Os {
 	// TAR & GZIP
 
 
-	public static function gzip( $from_path, $to_path=null, $rm=true ) {
+	public static function gzip( $from_path, $to_path=null ) {
 		if ( !file_exists( $from_path ) ) return false;
 		$to_path = ( $to_path ) ? ' ' . $to_path : '';
 		exec( 'tar cvzf' . $to_path . ' ' . $from_path, $out );
-		if ( $rm ) self :: rmdir( $from_path );
+		//if ( $rm ) self :: rmdir( $from_path );
 		return $out;
 	}
 

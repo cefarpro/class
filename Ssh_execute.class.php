@@ -64,7 +64,7 @@ class Ssh_execute {
         if ( ! is_file ( $localFile ) ) throw new Exception ( "Local file {$localFile} does not exist" );
         $this->logAction ( "Sending file $localFile as $remoteFile" );
 
-        $sftp = ssh2_sftp ( $this->conn );
+        $sftp = @ssh2_sftp ( $this->conn );
         $sftpStream = @fopen ( 'ssh2.sftp://' . $sftp . $remoteFile, 'w' );
         if ( ! $sftpStream ) {
             //  if 1 method failes try the other one

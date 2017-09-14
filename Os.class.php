@@ -936,5 +936,44 @@ class Os {
 		return $out;
 	}
 
+	
+	
+	
+	
+	///////////////////////////////////////////////////////////////////////
+	// PROCESS LIST | TASK LIST	
 
+	// убивает процесс по ид
+	public static function taskkill_pid( $pid ) {
+		exec( 'taskkill /pid ' . $pid . '"', $res );
+		return $res;
+	}
+
+	// возврашает массив процессов по WINDOWTITLE | WINDOWS ONLY
+	public static function tasklist_windowtitle_eq( $mask ) {
+		$arr = array( );
+		$mask = mb_convert_encoding( $mask, 'CP1251', 'UTF-8' );
+		exec( 'tasklist /V /FI "WINDOWTITLE eq ' . $mask . '"', $ps );
+		unset( $ps[ 0 ] );
+		if ( count( $ps ) > 1 ) {
+			unset( $ps[ 1 ] );
+			$ex_header = explode( ' ', $ps[ 2 ] );
+			unset( $ps[ 2 ] );
+			$i = 0;
+			foreach ( $ps as $p ) {
+				$position = 0;
+				foreach( $ex_header as $key => $header ) {
+					$val = substr( $p, $position, strlen( $header ) );
+					$val = trim( $val );
+					$arr[ $i ][ $key ] = $val;
+					$position += strlen( $header );
+					++$position;
+				}
+				++$i;
+			}
+		}
+		return $arr;
+	}
+	
+	
 }

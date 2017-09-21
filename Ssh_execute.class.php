@@ -146,8 +146,7 @@ class Ssh_execute {
                 $out .= $line;
                 //sleep ( 1 );
             }
-            //$this->logAction ( "ssh2 shell command $cmd output: $out" );
-			$this->logAction ( "ssh2 shell command $cmd end" );
+			$this->logAction ( "Executing ssh2 shell command: $cmd end" );
 			$this -> out_steam[ ] = $out;
         }
 

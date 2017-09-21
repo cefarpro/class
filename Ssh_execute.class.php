@@ -18,6 +18,9 @@ class Ssh_execute {
 
     private $stream_timeout = 100;
 
+	private $out_steam = array();
+	
+	
     private $log;
 
     private $lastLog;
@@ -111,7 +114,7 @@ class Ssh_execute {
         stream_set_blocking ( $this->error, true );
         stream_set_blocking ( $this->stream, true );
         $this->lastLog = stream_get_contents ( $this->stream );
-        $this->lastLog = stream_get_contents ( $this->error );
+        $this->lastLog .= stream_get_contents ( $this->error );
 		
         $this->logAction ( "$cmd output: {$this->lastLog}" );
         fclose ( $this->stream );
@@ -121,12 +124,13 @@ class Ssh_execute {
 
     }
 
-    public function shellCmd ( $cmds = array () ) {
+    public function shellCmd ( $cmds = array(), $returnOutput = false ) {
         $this->logAction ( "Openning ssh2 shell" );
         $this->shellStream = ssh2_shell ( $this->conn );
 
         sleep ( 1 );
         $out = '';
+		$this -> out_steam = array( );
         while ( $line = fgets ( $this->shellStream ) ) {
             $out .= $line;
         }
@@ -140,13 +144,16 @@ class Ssh_execute {
             sleep ( 1 );
             while ( $line = fgets ( $this->shellStream ) ) {
                 $out .= $line;
-                sleep ( 1 );
+                //sleep ( 1 );
             }
-            $this->logAction ( "ssh2 shell command $cmd output: $out" );
+            //$this->logAction ( "ssh2 shell command $cmd output: $out" );
+			$this->logAction ( "ssh2 shell command $cmd end" );
+			$this -> out_steam[ ] = $out;
         }
 
         $this->logAction ( "Closing shell stream" );
         fclose ( $this->shellStream );
+		if ( $returnOutput ) return $this -> out_steam;
     }
 
     public function getLastOutput () {

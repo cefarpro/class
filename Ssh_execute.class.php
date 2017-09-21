@@ -147,7 +147,7 @@ class Ssh_execute {
                 //sleep ( 1 );
             }
 			$this->logAction ( "Executing ssh2 shell command: $cmd end" );
-			$this -> out_steam[ ] = $out;
+			$this -> out_steam[ ] = substr( $out, strlen( $cmd . PHP_EOL ) );
         }
 
         $this->logAction ( "Closing shell stream" );

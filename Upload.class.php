@@ -15,6 +15,13 @@ class Upload {
 
 
 	/**
+	$from = array(
+		'/path/to/file1',
+		'/path/to/file2',
+		'/path/to/file3',
+		...
+	),
+	$to = '/path/to/server/dir/',
 	$connect = array(
 		'host' => 'localhost',
 		'port' => 22,
@@ -23,11 +30,18 @@ class Upload {
 	)
 	*/
 	public static function ssh( $from = array( ), $to = '/', $connect = array( ) ) {
-		
+		return false;
 	}
 
 
 	/**
+	$from = array(
+		'/path/to/file1',
+		'/path/to/file2',
+		'/path/to/file3',
+		...
+	),
+	$to = '/path/to/server/dir/',
 	$connect = array(
 		'host' => 'localhost',
 		'port' => 22,
@@ -36,13 +50,13 @@ class Upload {
 	)
 	*/
 	public static function rsynk( $from = array( ), $to = '/', $connect = array( ) ) {
-		
+		return false;
 	}
 
 
 	// 
 	public static function ydisk( $from = array( ), $to = '/', $connect = array( ) ) {
-		
+		return false;
 	}
 
 
@@ -77,7 +91,7 @@ class Upload {
 			}
 		}
 		curl_setopt( $ch, CURLOPT_URL, $target_url );
-		curl_setopt( $ch, CURLOPT_TIMEOUT, 28800 );
+		curl_setopt( $ch, CURLOPT_TIMEOUT, 28800 ); // 8 hour
 		curl_setopt( $ch, CURLINFO_HEADER_OUT, false );
 		curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
 		curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, false );
@@ -95,11 +109,8 @@ class Upload {
 
 
 
-	
 	public static function smtp( $from = array( ), $to = '/', $connect = array( ) ) {
-		
-		
-		
+		return false;
 	}
 	
 	

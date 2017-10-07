@@ -64,8 +64,12 @@ class Download {
 			return false;
 		}
 	}
-	
-	
+
+
+
+	public static function smtp( $from = array( ), $to = '/', $connect = array( ) ) {
+		return false;
+	}
 	
 
 }

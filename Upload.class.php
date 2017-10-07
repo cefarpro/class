@@ -75,6 +75,12 @@ class Upload {
 			'CURL_OPTION2', 
 			'CURL_OPTION3',
 			...
+		),
+		'headers' = array(
+			'HTTP(s) HEADER1',
+			'HTTP(s) HEADER2',
+			'HTTP(s) HEADER3',
+			...
 		)
 	)
 	----------------------------------------------
@@ -139,23 +145,23 @@ class Upload {
 			}
 		}
 		$error = false;
-		foreach( $array_files as $key => $filename ) {
-			$uploadfile = $uploaddir . DIRECTORY_SEPARATOR . basename( $filename[ 'name' ] );
+		foreach( $array_files as $key => $file ) {
+			$uploadfile = $uploaddir . DIRECTORY_SEPARATOR . basename( $file[ 'name' ] );
 			if ( file_exists( $uploadfile ) ) {
 				if ( $stat = stat( $uploadfile ) ) {
-					$r[ 'data' ][ $filename[ 'name' ] ] = 'file exist[ ' . $filename[ 'size' ] . ' / ' . $stat[ 'size' ] . ' ]';
+					$r[ 'data' ][ $file[ 'name' ] ] = 'file exist[ ' . $file[ 'size' ] . ' / ' . $stat[ 'size' ] . ' ]';
 					continue;
 				}
 				else {
-					$r[ 'errors' ][ $filename[ 'name' ] ] = 'file dont uploaded';
+					$r[ 'errors' ][ $file[ 'name' ] ] = 'file dont uploaded';
 					$error = true;
 				}
 			}
-			if ( move_uploaded_file( $filename[ 'tmp_name' ], $uploadfile ) ) {
-				$r[ 'data' ][ $filename[ 'name' ] ] = 'file uploaded [ ' . $filename[ 'size' ] . ' ]';
-				$r[ 'size' ] += $filename[ 'size' ];
+			if ( move_uploaded_file( $file[ 'tmp_name' ], $uploadfile ) ) {
+				$r[ 'data' ][ $file[ 'name' ] ] = 'file uploaded [ ' . $file[ 'size' ] . ' ]';
+				$r[ 'size' ] += $file[ 'size' ];
 			} else {
-				$r[ 'errors' ][ $filename[ 'name' ] ] = 'file dont uploaded';
+				$r[ 'errors' ][ $file[ 'name' ] ] = 'file dont uploaded';
 				$error = true;
 			}
 		}
@@ -163,7 +169,7 @@ class Upload {
 		if ( $error ) {
 			$r[ 's' ] = false;
 			$r[ 'code' ] = 400;
-			$r[ 'message' ] = 'Ошибка выполнения';
+			$r[ 'message' ] = 'Bad Request';
 			header( 'HTTP/1.1 400 Bad Request' );
 		}
 		header( 'Content-type: application/json' );
@@ -172,40 +178,227 @@ class Upload {
 		exit( ( $error ) ? 1 : 0 );
 	}
 ?>
+
+		0.42
+		0.08
 	*/
-	public static function post( $from = array( ), $to = '/', $connect = array( ) ) {
+	public static function curl( $from = array( ), $to = '', $connect = array( ) ) {
+
+	  $headers = array( 'Content-Type: multipart/form-data' ); // cURL headers for file uploading
+	  $curly = array( );
+	  $result = array( );
+
+	  $mh = curl_multi_init( );
+
+	  if ( !count( $from ) ) return false;
+	  $filesize = 0;
+	  foreach( $from as $id => $f ) {
+
+		if ( !is_readable( $f ) ) continue;
+
+		$post = array( );
+
+		$curly[ $id ] = curl_init( );
+
+		$mime = finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $f );
+		$filename = basename( $f );
+		if ( ( version_compare( PHP_VERSION, '5.5' ) >= 0 ) ) {
+			$post[ 'file' . $k ] = new CURLFile( $f, $mime, $filename );
+			curl_setopt( $curly[ $id ], CURLOPT_SAFE_UPLOAD, true );
+		} else {
+			$post[ 'file' . $k ] = '@' . $f;
+			echo "-----------------------------------";
+		}
+	 
+		if ( isset( $connect[ 'headers' ] ) && is_array( $connect[ 'headers' ] ) && count( $connect[ 'headers' ] ) ) $headers = array_merge( $headers, $connect[ 'headers' ] );
+		curl_setopt( $curly[ $id ], CURLOPT_URL, $connect[ 'target_url' ] . ( ( $to ) ? '?uploaddir=' . $to : '' ) );
+		curl_setopt( $curly[ $id ], CURLOPT_TIMEOUT, 28800 ); // 8 hour
+		curl_setopt( $curly[ $id ], CURLOPT_POST, true );
+		curl_setopt( $curly[ $id ], CURLOPT_HTTPHEADER, $headers );
+		curl_setopt( $curly[ $id ], CURLOPT_FOLLOWLOCATION, true );
+		curl_setopt( $curly[ $id ], CURLOPT_SSL_VERIFYPEER, false );
+		curl_setopt( $curly[ $id ], CURLOPT_SSL_VERIFYHOST, false );
+		curl_setopt( $curly[ $id ], CURLOPT_ENCODING, 'gzip' );
+		curl_setopt( $curly[ $id ], CURLOPT_POSTFIELDS, $post );
+		curl_setopt( $curly[ $id ], CURLOPT_RETURNTRANSFER, true );
+		//curl_setopt( $ch, CURLINFO_HEADER_OUT, true );
+
+		// extra options?
+		if ( isset( $connect[ 'options' ] ) ) curl_setopt_array( $curly[ $id ], $connect[ 'options' ] );
+		curl_multi_add_handle( $mh, $curly[ $id ] );
+	  }
+
+	  // execute the handles
+	  $running = null;
+	  do {
+		curl_multi_exec( $mh, $running );
+	  } while( $running > 0 );
+
+	  // get content and remove handles
+	  foreach( $curly as $id => $c ) {
+		$result[ $id ] = curl_multi_getcontent( $c );
+		curl_multi_remove_handle( $mh, $c );
+	  }
+
+	  // all done
+	  curl_multi_close( $mh );
+
+	  return $result;
+
+	}
+
+
+	/**
+	SLOWLY 1.11
+	*/
+	public static function get_contents( $from = array( ), $to = '', $connect = array( ) ) {
 		$post = array( );
 		if ( !count( $from ) ) return false;
-		$ch = curl_init( $from_file );
+		$filesize = 0;
+		$delimiter = '-------------' . uniqid( );
+		$post = '';
 		foreach( $from as $k => $f ) {
-			if ( ( version_compare( PHP_VERSION, '5.5' ) >= 0 ) ) {
-				$post[ 'file' ] = new CURLFile( $f );
-				curl_setopt( $ch, CURLOPT_SAFE_UPLOAD, true );
-			} else {
-				$post[ 'file '] = '@' . $f;
+			if ( !is_readable( $f ) ) continue;
+			$post .= '--' . $delimiter. "\r\n";
+			$post .= 'Content-Disposition: form-data; name="file[' . $k . ']"';
+			$post .= '; filename="' . basename( $f ) . '"' . "\r\n";
+			$post .= 'Content-Type: ' . ( finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $f ) )  . "\r\n\r\n";
+			$post .= file_get_contents( $f ) . "\r\n";
+			$post .= "--" . $delimiter . "--\r\n";
+		}
+		$headers = array(
+			'Content-Type: multipart/form-data; boundary=' . $delimiter,
+			'Content-Length: ' . strlen( $post )
+		);
+		$context = stream_context_create(array(
+			'http' => array(
+				  'method' => 'POST',
+				  'header' => $headers,
+				  'content' => $post,
+			)
+		));
+		$res = file_get_contents( $connect[ 'target_url' ] . ( ( $to ) ? '?uploaddir=' . $to : '' ), false, $context );
+		return $res;
+	}
+
+
+	/**
+	SLOWLY 1.03
+	*/
+	public static function socket( $from = array( ), $to = '', $connect = array( ) ) {
+		try{
+			$post = array( );
+			if ( !count( $from ) ) return false;
+			$filesize = 0;
+			$delimiter = '-------------' . uniqid( );
+			$post = '';
+
+			foreach( $from as $k => $f ) {
+				if ( !is_readable( $f ) ) continue;
+				$post .= '--' . $delimiter. "\r\n";
+				$post .= 'Content-Disposition: form-data; name="file[' . $k . ']"';
+				$post .= '; filename="' . basename( $f ) . '"' . "\r\n";
+				$post .= 'Content-Type: ' . ( finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $f ) )  . "\r\n\r\n";
+				$post .= file_get_contents( $f ) . "\r\n";
+				$post .= "--" . $delimiter . "--\r\n";
+			}
+
+			$url = $connect[ 'target_url' ] . ( ( $to ) ? '?uploaddir=' . $to : '' );
+			$parse_url = parse_url( $url );
+			$uri = str_replace( $parse_url[ 'scheme' ] . '://' . $parse_url[ 'host' ], '', $url );
+			$port = ( $parse_url[ 'scheme' ] == 'http' ) ? 80 : 443;
+
+			$response = '';
+			if ( $fp = fsockopen( $parse_url[ 'host' ], $port, $errno, $errstr, 20 ) ) {
+				$write = "POST " . $uri . " HTTP/1.1\r\n"
+					. "Host: " . $parse_url[ 'host' ] . "\r\n"
+					. "Content-Type: multipart/form-data; boundary=" . $delimiter . "\r\n"
+					. "Content-Length: " . strlen( $post ) . "\r\n"
+					. "Connection: Close\r\n\r\n"
+					. $post;
+
+				fwrite( $fp, $write );
+
+				while ( $line = fgets( $fp ) ) {
+					if ( $line !== false ) {
+						$response .= $line;
+					}
+				}
+				fclose( $fp );
+				$response = explode( "\r\n\r\n", $response );
+				$response = end( $response );
+				return $response;
+			}
+			else {
+				throw new Exception( "$errstr ($errno)" );
 			}
 		}
-		curl_setopt( $ch, CURLOPT_URL, $target_url );
-		curl_setopt( $ch, CURLOPT_TIMEOUT, 28800 ); // 8 hour
-		curl_setopt( $ch, CURLINFO_HEADER_OUT, false );
-		curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-		curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, false );
-		// curl_setopt( $ch, CURLOPT_BUFFERSIZE, 5356800 );
-		curl_setopt( $ch, CURLOPT_POSTFIELDS, $post );
-		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-		if ( isset( $connect[ 'options' ] ) ) curl_setopt_array( $ch, $connect[ 'options' ] );
-		$result = curl_exec( $ch );
-		$info = curl_getinfo( $ch );
-		curl_close( $ch );
-		return $result;
+		catch ( Exception $e ) {
+			echo 'Error: ' . $e -> getMessage( );
+		}
 	}
 
 
 
-	public static function smtp( $from = array( ), $to = '/', $connect = array( ) ) {
-		return false;
+
+	function multiRequest( $data, $options = array( ) ) {
+
+	  $curly = array( );
+	  $result = array( );
+
+	  // multi handle
+	  $mh = curl_multi_init( );
+
+	  // loop through $data and create curl handles
+	  // then add them to the multi-handle
+	  foreach ( $data as $id => $d ) {
+	 
+		$curly[ $id ] = curl_init( );
+	 
+		$url = ( is_array( $d ) && !empty( $d[ 'url' ] ) ) ? $d[ 'url' ] : $d;
+		curl_setopt( $curly[ $id ], CURLOPT_URL,            $url );
+		curl_setopt( $curly[ $id ], CURLOPT_HEADER,         0 );
+		curl_setopt( $curly[ $id ], CURLOPT_RETURNTRANSFER, 1 );
+	 
+		// post?
+		if ( is_array( $d ) ) {
+		  if ( !empty( $d[ 'post' ] ) ) {
+			curl_setopt( $curly[ $id ], CURLOPT_POST,       1 );
+			curl_setopt( $curly[ $id ], CURLOPT_POSTFIELDS, $d[ 'post' ] );
+		  }
+		}
+	 
+		// extra options?
+		if ( !empty( $options ) ) {
+		  curl_setopt_array( $curly[ $id ], $options );
+		}
+	 
+		curl_multi_add_handle( $mh, $curly[ $id ] );
+	  }
+	 
+	  // execute the handles
+	  $running = null;
+	  do {
+		curl_multi_exec( $mh, $running );
+	  } while( $running > 0 );
+	 
+	 
+	  // get content and remove handles
+	  foreach( $curly as $id => $c ) {
+		$result[ $id ] = curl_multi_getcontent( $c );
+		curl_multi_remove_handle( $mh, $c );
+	  }
+
+	  // all done
+	  curl_multi_close( $mh );
+
+	  return $result;
 	}
-	
+
+
+
+
+
 	
 	
 	

@@ -211,7 +211,7 @@ class Upload {
 		else if ( !is_readable( $f ) ) {
 			$ret[ 'success' ] = false;
 			$ret[ 'from' ][ $id ] = $from_files[ $id ];
-			$ret[ 'to' ][ $id ] = $to_files[ $id ];
+			$ret[ 'to' ][ $id ] = $connect[ 'target_url' ] . ( ( $to ) ? '?uploaddir=' . $to . basename( $from_files[ $id ] ) : '' );
 			$ret[ 'status' ][ $id ] = 'UNREADABLE';
 			$ret[ 'info' ][ $id ] = stat( $f );
 			for( $n = 0; $n <= 12; $n++ ) unset( $ret[ 'info' ][ $id ][ $n ] );

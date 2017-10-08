@@ -203,7 +203,7 @@ class Upload {
 		if ( !file_exists( $f ) ) {
 			$ret[ 'success' ] = false;
 			$ret[ 'from' ][ $id ] = $from[ $id ];
-			$ret[ 'to' ][ $id ] = $connect[ 'target_url' ] . ( ( $to ) ? '?uploaddir=' . $to : ' <---POST--- ' ) . '' . basename( $from[ $id ] );
+			$ret[ 'to' ][ $id ] = $connect[ 'target_url' ] . ( ( $to ) ? '?uploaddir=' . $to : ' < @POST ' ) . '' . basename( $from[ $id ] );
 			$ret[ 'status' ][ $id ] = 'NOEXIST';
 			$ret[ 'info' ][ $id ] = false;
 			continue;
@@ -211,7 +211,7 @@ class Upload {
 		else if ( !is_readable( $f ) ) {
 			$ret[ 'success' ] = false;
 			$ret[ 'from' ][ $id ] = $from[ $id ];
-			$ret[ 'to' ][ $id ] = $connect[ 'target_url' ] . ( ( $to ) ? '?uploaddir=' . $to : ' <---POST--- ' ) . '' . basename( $from[ $id ] );
+			$ret[ 'to' ][ $id ] = $connect[ 'target_url' ] . ( ( $to ) ? '?uploaddir=' . $to : ' < @POST ' ) . '' . basename( $from[ $id ] );
 			$ret[ 'status' ][ $id ] = 'UNREADABLE';
 			$ret[ 'info' ][ $id ] = stat( $f );
 			for( $n = 0; $n <= 12; $n++ ) unset( $ret[ 'info' ][ $id ][ $n ] );
@@ -266,7 +266,7 @@ class Upload {
 			$ret[ 'success' ] = false;
 		}
 		$ret[ 'from' ][ $id ] = $from[ $id ];
-		$ret[ 'to' ][ $id ] = $connect[ 'target_url' ] . ( ( $to ) ? '?uploaddir=' . $to : ' <---POST--- ' ) . '' . basename( $from[ $id ] );
+		$ret[ 'to' ][ $id ] = $connect[ 'target_url' ] . ( ( $to ) ? '?uploaddir=' . $to : ' < @POST ' ) . '' . basename( $from[ $id ] );
 		$ret[ 'data' ][ $id ] = curl_multi_getcontent( $c );
 		$ret[ 'info' ][ $id ] = $info[ $id ];
 		curl_multi_remove_handle( $mh, $c );

@@ -13,78 +13,71 @@
 
 class Upload {
 
-
 	/**
-	$from = array(
-		'/path/to/file1',
-		'/path/to/file2',
-		'/path/to/file3',
-		...
-	),
-	$to = '/path/to/server/dir/',
-	$connect = array(
-		'host' => 'localhost',
-		'port' => 22,
-		'user' => 'user',
-		'pass' => 'password'
-	)
-	*/
-	public static function ssh( $from = array( ), $to = '/', $connect = array( ) ) {
-		return false;
-	}
-
-
-	/**
-	$from = array(
-		'/path/to/file1',
-		'/path/to/file2',
-		'/path/to/file3',
-		...
-	),
-	$to = '/path/to/server/dir/',
-	$connect = array(
-		'host' => 'localhost',
-		'port' => 22,
-		'user' => 'user',
-		'pass' => 'password'
-	)
-	*/
-	public static function rsynk( $from = array( ), $to = '/', $connect = array( ) ) {
-		return false;
-	}
-
-
-	// 
-	public static function ydisk( $from = array( ), $to = '/', $connect = array( ) ) {
-		return false;
-	}
-
-
-	/**
-	$from = array(
-		'/path/to/file1',
-		'/path/to/file2',
-		'/path/to/file3',
-		...
-	),
-	$to = '/path/to/server/dir/',
-	$connect = array(
-		'target_url' => 'http://127.0.0.1/uploader.php',
-		'options' = array(
-			'CURL_OPTION1', 
-			'CURL_OPTION2', 
-			'CURL_OPTION3',
+		//////////////////////////////////
+		// ARGUMENTS
+		$from_files = array(
+			'/path/to/file1',
+			'/path/to/file2',
+			'/path/to/file3',
 			...
 		),
-		'headers' = array(
-			'HTTP(s) HEADER1',
-			'HTTP(s) HEADER2',
-			'HTTP(s) HEADER3',
+		$to_files = array(
+			'/path/to/server/file1',
+			'/path/to/server/file2',
+			'/path/to/server/file3',
 			...
-		)
-	)
-	----------------------------------------------
-	FILE uploader.php :
+		),
+		$connect = array(
+			'target_url' => 'http://127.0.0.1/uploader.php',
+			'options' = array(
+				'CURL_OPTION1', 
+				'CURL_OPTION2', 
+				'CURL_OPTION3',
+				...
+			),
+			'headers' = array(
+				'HTTP(s) HEADER1',
+				'HTTP(s) HEADER2',
+				'HTTP(s) HEADER3',
+				...
+			)
+		);
+		/////////////////////////////////
+		// RETURN
+		array(
+			'success' => true||false, // true - no errors || false - one ore more errors
+			'files' => array(
+				'/path/from/file1/' => '/path/to/file1/',
+				'/path/from/file2/' => '/path/to/file2/',
+				'/path/from/file3/' => '/path/to/file3/',
+				...
+			),
+			'status' => array(
+				'NOEXIST', // local file not exist
+				'UNREADABLE', // local file unreadable
+				'UPLOAD', // file has been uploaded
+				'FAIL', // file is not uploaded
+			),
+			'data' => array(
+				'content1' ( string ), // curl_get_content( )
+				'content2' ( string ), // curl_get_content( )
+				'content3' ( string ), // curl_get_content( )
+				...
+			),
+			'info' => array(
+				'request1' ( array ), // curl_getinfo( ) || stat( )
+				'request2' ( array ), // curl_getinfo( ) || stat( )
+				'request3' ( array ), // curl_getinfo( ) || stat( )
+				...
+			),
+		);
+
+
+
+		/////////////////////////////////
+		// FILE uploader.php :
+		/////////////////////////////////
 
 <?php
 	set_time_limit( 0 );
@@ -178,15 +171,20 @@ class Upload {
 		exit( ( $error ) ? 1 : 0 );
 	}
 ?>
-
-		0.42
-		0.08
 	*/
 	public static function post( $from = array( ), $to = '', $connect = array( ) ) {
 
 	  $headers = array( 'Content-Type: multipart/form-data' ); // cURL headers for file uploading
 	  $curly = array( );
-	  $result = array( );
+	  $info = array( );
+
+	  $ret = array(
+			'success' => true,
+			'files' => array( ),
+			'status' => array( ),
+			'data' => array( ),
+			'info' => array( ),
+	  );
 
 	  $mh = curl_multi_init( );
 
@@ -194,7 +192,21 @@ class Upload {
 	  $filesize = 0;
 	  foreach( $from as $id => $f ) {
 
-		if ( !is_readable( $f ) ) continue;
+		if ( !file_exists( $f ) ) {
+			$ret[ 'success' ] = false;
+			$ret[ 'files' ][ $id ][ $from[ $id ] ] = $to[ $id ];
+			$ret[ 'status' ][ $id ] = 'NOEXIST';
+			$ret[ 'info' ][ $id ] = false;
+			continue;
+		}
+		else if ( !is_readable( $f ) ) {
+			$ret[ 'success' ] = false;
+			$ret[ 'files' ][ $id ][ $from[ $id ] ] = $to[ $id ];
+			$ret[ 'status' ][ $id ] = 'UNREADABLE';
+			$ret[ 'info' ][ $id ] = stat( $f );
+			for( $n = 0; $n <= 12; $n++ ) unset( $ret[ 'info' ][ $id ][ $n ] );
+			continue;
+		}
 
 		$post = array( );
 
@@ -207,9 +219,8 @@ class Upload {
 			curl_setopt( $curly[ $id ], CURLOPT_SAFE_UPLOAD, true );
 		} else {
 			$post[ 'file' . $k ] = '@' . $f;
-			echo "-----------------------------------";
 		}
-	 
+
 		if ( isset( $connect[ 'headers' ] ) && is_array( $connect[ 'headers' ] ) && count( $connect[ 'headers' ] ) ) $headers = array_merge( $headers, $connect[ 'headers' ] );
 		curl_setopt( $curly[ $id ], CURLOPT_URL, $connect[ 'target_url' ] . ( ( $to ) ? '?uploaddir=' . $to : '' ) );
 		curl_setopt( $curly[ $id ], CURLOPT_TIMEOUT, 28800 ); // 8 hour
@@ -236,14 +247,24 @@ class Upload {
 
 	  // get content and remove handles
 	  foreach( $curly as $id => $c ) {
-		$result[ $id ] = curl_multi_getcontent( $c );
+		$info[ $id ] = curl_getinfo( $c );
+		if ( $info[ $id ][ 'http_code'  ] == 200 ) {
+			$ret[ 'status' ][ $id ] = 'UPLOAD';
+		}
+		else {
+			$ret[ 'status' ][ $id ] = 'FAIL';
+			$ret[ 'success' ] = false;
+		}
+		$ret[ 'files' ][ $id ][ $from[ $id ] ] = $to[ $id ];
+		$ret[ 'data' ][ $id ] = curl_multi_getcontent( $c );
+		$ret[ 'info' ][ $id ] = $info[ $id ];
 		curl_multi_remove_handle( $mh, $c );
 	  }
 
 	  // all done
 	  curl_multi_close( $mh );
 
-	  return $result;
+	  return $ret;
 
 	}
 
@@ -341,7 +362,61 @@ class Upload {
 
 
 
-	function multiRequest( $data, $options = array( ) ) {
+
+
+	/**
+	$from = array(
+		'/path/to/file1',
+		'/path/to/file2',
+		'/path/to/file3',
+		...
+	),
+	$to = '/path/to/server/dir/',
+	$connect = array(
+		'host' => 'localhost',
+		'port' => 22,
+		'user' => 'user',
+		'pass' => 'password'
+	)
+	*/
+	public static function ssh( $from = array( ), $to = '/', $connect = array( ) ) {
+		return false;
+	}
+
+
+	/**
+	$from = array(
+		'/path/to/file1',
+		'/path/to/file2',
+		'/path/to/file3',
+		...
+	),
+	$to = '/path/to/server/dir/',
+	$connect = array(
+		'host' => 'localhost',
+		'port' => 22,
+		'user' => 'user',
+		'pass' => 'password'
+	)
+	*/
+	public static function rsynk( $from = array( ), $to = '/', $connect = array( ) ) {
+		return false;
+	}
+
+
+	// parameters
+	public static function ydisk( $from = array( ), $to = '/', $connect = array( ) ) {
+		return false;
+	}
+
+
+
+
+
+
+
+
+	function multiCurlRequest( $data, $options = array( ) ) {
 
 	  $curly = array( );
 	  $result = array( );

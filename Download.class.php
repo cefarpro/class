@@ -19,18 +19,75 @@ class Download {
 		exec( 'wget -nv --no-check-certificate --no-clobber -O ' . $to_file . ' ' . $from_file . $stdout, $download_strout );
 		return $download_strout;
 	}
-	
-	
-	
-	public static function curl( $from_files = array( ), $to_files = array( ), $filter = array( ) ) {
+
+
+	/**
+		//////////////////////////////////
+		// ARGUMENTS
+		$from_files = array(
+			'/path/to/file1',
+			'/path/to/file2',
+			'/path/to/file3',
+			...
+		),
+		$to_files = array(
+			'/path/to/server/file1',
+			'/path/to/server/file2',
+			'/path/to/server/file3',
+			...
+		),
+		$merge = true||false // true - if you want replace exist files (default = false)
+		$filter = array(
+			'file1',
+			'file2',
+			...
+		)
+		/////////////////////////////////
+		// RETURN
+		array(
+			'success' => true||false, // true - no errors || false - one ore more errors
+			'files' => array(
+				'/path/from/file1/' => '/path/to/file1/',
+				'/path/from/file2/' => '/path/to/file2/',
+				'/path/from/file3/' => '/path/to/file3/',
+				...
+			),
+			'status' => array(
+				'EXIST', // file exist ( parameter merge )
+				'DOWNLOAD', // file has been downloaded
+				'FAIL', // file is not downloaded
+			),
+			'info' => array(
+				'request1' = array(), // curl_getinfo( ) || stat( )
+				'request2' = array(), // curl_getinfo( ) || stat( )
+				'request3' = array(), // curl_getinfo( ) || stat( )
+				...
+			)
+		)
+	*/
+	public static function get( $from_files = array( ), $to_files = array( ), $merge = false, $filter = array( ) ) {
 
 	  $curly = array( );
 	  $info = array( );
-	  $ret = array( );
+
+	  $ret = array(
+			'success' => true,
+			'files' => array( ),
+			'status' => array( ),
+			'info' => array( )
+	  );
 
 	  $mh = curl_multi_init( );
 
 	  foreach ( $from_files as $id => $f ) {
+
+		if ( file_exists( $to_files[ $id ] ) ) {
+			$ret[ 'files' ][ $id ][ $from_files[ $id ] ] = $to_files[ $id ];
+			$ret[ 'status' ][ $id ] = 'EXIST';
+			$ret[ 'info' ][ $id ] = stat( $to_files[ $id ] );
+			for( $n = 0; $n <= 12; $n++ ) unset( $ret[ 'info' ][ $id ][ $n ] );
+			continue;
+		}
 
 		$curly[ $id ] = curl_init( $f );
 		curl_setopt( $curly[ $id ], CURLOPT_HEADER, 0 );
@@ -38,14 +95,6 @@ class Download {
 		curl_setopt( $curly[ $id ], CURLOPT_TIMEOUT, 28800 );
 		curl_setopt( $curly[ $id ], CURLOPT_SSL_VERIFYPEER, false );
 		curl_setopt( $curly[ $id ], CURLOPT_SSL_VERIFYHOST, false );
-
-		if ( file_exists( $to_files[ $id ] ) ) {
-			//$ret[ $id ] = true;
-// !!!!!!!!!!!!!!!!!!!!!!!!!
-			Registry :: __instance( ) -> logging -> debug( "download_file_exist\t" . $to_files[ $id ] );
-			continue;
-		}
-
 		curl_setopt( $curly[ $id ], CURLOPT_FILE, fopen( $to_files[ $id ], 'x' ) );
 		curl_multi_add_handle( $mh, $curly[ $id ] );
 	  }
@@ -67,12 +116,14 @@ class Download {
 
 	  foreach( $info as $id => $i ) {
 		if ( $i[ 'http_code' ] == '200' ) {
-			$ret[ $id ] = date( 'Y-m-d h:i:s' ) . ' URL:' . $from_files[ $id ] . ' [' . $i[ "download_content_length" ] . '/' . $i[ "size_download" ] . '] -> "' . $to_files[ $id ] . '" [1]';
+			$ret[ 'files' ][ $id ][ $from_files[ $id ] ] = $to_files[ $id ];
+			$ret[ 'status' ][ $id ] = 'DOWNLOAD';
+			$ret[ 'info' ][ $id ] = $info[ $id ];
 		}
 		else {
-//			$ret[ $id ] = false;
-// !!!!!!!!!!!!!!!!!!!!!!!!!
-			Registry :: __instance( ) -> logging -> error( "download_code\t" . $i[ 'http_code' ] . "\t" . $from_files[ $id ] );
+			$ret[ 'files' ][ $id ][ $from_files[ $id ] ] = $to_files[ $id ];
+			$ret[ 'status' ][ $id ] = 'FAIL';
+			$ret[ 'info' ][ $id ] = $info[ $id ];
 		}
 	  }
 

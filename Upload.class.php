@@ -90,6 +90,7 @@ class Upload {
 	if ( !isset( $_GET[ 'uploaddir' ] ) ) {
 		$uploaddir = realpath( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'files' . DIRECTORY_SEPARATOR . 'catalog' . DIRECTORY_SEPARATOR . 'upload';
 	} else $uploaddir = $_GET[ 'uploaddir' ];
+
 	$r = array(
 		's' => true,
 		'code' => 200,
@@ -103,8 +104,8 @@ class Upload {
 		$i = 0;
 		foreach( $_FILES as $keyname => $file ) {
 			if ( !is_array( $file[ 'name' ] ) || !count( $file[ 'name' ] ) ) {
-				//////////////////////////////////////////
-				if ( count( $allow_filter_type ) && array_search( $file[ 'type' ], $allow_filter_type ) === false ) continue; // filtering type
+				////////////////////////////////////////// FILTER
+				if ( count( $allow_filter_type ) && array_search( finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $file[ 'tmp_name' ] ), $allow_filter_type ) === false ) continue; // filtering type
 				if ( count( $allow_filter_name ) && !preg_match( "/(" . implode( '|', $allow_filter_name ) . ")/", $file[ 'name' ] ) ) continue; // filtering name
 				//////////////////////////////////////////
 				foreach( $file as $key => $f ) {
@@ -117,9 +118,9 @@ class Upload {
 				$i2 = 0;
 				foreach( $file as $key => $f ) {
 					foreach ( $f as $k => $v ) {
-						//////////////////////////////////////////
+						////////////////////////////////////////// FILTER
 						// filtering type
-						if ( count( $allow_filter_type ) && array_search( $file[ 'type' ][ $k ], $allow_filter_type ) === false ) {
+						if ( count( $allow_filter_type ) && array_search( finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $file[ 'tmp_name' ][ $k ] ), $allow_filter_type ) === false ) {
 							unset( $array_files[ $i + $k ][ $key ] );
 							continue; 
 						}
@@ -162,7 +163,7 @@ class Upload {
 		if ( $error ) {
 			$r[ 's' ] = false;
 			$r[ 'code' ] = 400;
-			$r[ 'message' ] = 'Bad Request';
+			$r[ 'message' ] = 'Ошибка выполнения';
 			header( 'HTTP/1.1 400 Bad Request' );
 		}
 		header( 'Content-type: application/json' );

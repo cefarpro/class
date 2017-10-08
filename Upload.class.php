@@ -182,7 +182,7 @@ class Upload {
 		0.42
 		0.08
 	*/
-	public static function curl( $from = array( ), $to = '', $connect = array( ) ) {
+	public static function post( $from = array( ), $to = '', $connect = array( ) ) {
 
 	  $headers = array( 'Content-Type: multipart/form-data' ); // cURL headers for file uploading
 	  $curly = array( );

@@ -19,7 +19,9 @@ class Download {
 		exec( 'wget -nv --no-check-certificate --no-clobber -O ' . $to_file . ' ' . $from_file . $stdout, $download_strout );
 		return $download_strout;
 	}
-
+	
+	
+	
 	public static function curl( $from_files = array( ), $to_files = array( ), $filter = array( ) ) {
 
 	  $curly = array( );
@@ -38,8 +40,9 @@ class Download {
 		curl_setopt( $curly[ $id ], CURLOPT_SSL_VERIFYHOST, false );
 
 		if ( file_exists( $to_files[ $id ] ) ) {
-			$ret[ $id ] = "download_file_exist\t" . $to_files[ $id ];
-			Registry :: __instance( ) -> logging -> debug( $ret[ $id ] );
+			//$ret[ $id ] = true;
+// !!!!!!!!!!!!!!!!!!!!!!!!!
+			Registry :: __instance( ) -> logging -> debug( "download_file_exist\t" . $to_files[ $id ] );
 			continue;
 		}
 
@@ -52,7 +55,6 @@ class Download {
 	  do {
 		curl_multi_exec( $mh, $running );
 	  } while( $running > 0 );
-
 
 	  // get content and remove handles
 	  foreach( $curly as $id => $c ) {
@@ -68,8 +70,9 @@ class Download {
 			$ret[ $id ] = date( 'Y-m-d h:i:s' ) . ' URL:' . $from_files[ $id ] . ' [' . $i[ "download_content_length" ] . '/' . $i[ "size_download" ] . '] -> "' . $to_files[ $id ] . '" [1]';
 		}
 		else {
-			$ret[ $id ] = "download_code\t" . $i[ 'http_code' ] . "\t" . $from_files[ $id ];
-			Registry :: __instance( ) -> logging -> error( $ret[ $id ] );
+//			$ret[ $id ] = false;
+// !!!!!!!!!!!!!!!!!!!!!!!!!
+			Registry :: __instance( ) -> logging -> error( "download_code\t" . $i[ 'http_code' ] . "\t" . $from_files[ $id ] );
 		}
 	  }
 

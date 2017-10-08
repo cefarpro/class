@@ -47,10 +47,16 @@ class Upload {
 		// RETURN
 		array(
 			'success' => true||false, // true - no errors || false - one ore more errors
-			'files' => array(
-				'/path/from/file1/' => '/path/to/file1/',
-				'/path/from/file2/' => '/path/to/file2/',
-				'/path/from/file3/' => '/path/to/file3/',
+			'from' => array(
+				'/path/from/file1/',
+				'/path/from/file2/',
+				'/path/from/file3/',
+				...
+			),
+			'to' => array(
+				'/path/to/file1/',
+				'/path/to/file2/',
+				'/path/to/file3/',
 				...
 			),
 			'status' => array(
@@ -181,7 +187,8 @@ class Upload {
 
 	  $ret = array(
 			'success' => true,
-			'files' => array( ),
+			'from' => array( ),
+			'to' => array( ),
 			'status' => array( ),
 			'data' => array( ),
 			'info' => array( ),
@@ -195,14 +202,16 @@ class Upload {
 
 		if ( !file_exists( $f ) ) {
 			$ret[ 'success' ] = false;
-			$ret[ 'files' ][ $id ][ $from[ $id ] ] = $to[ $id ];
+			$ret[ 'from' ][ $id ] = $from_files[ $id ];
+			$ret[ 'to' ][ $id ] = $to_files[ $id ];
 			$ret[ 'status' ][ $id ] = 'NOEXIST';
 			$ret[ 'info' ][ $id ] = false;
 			continue;
 		}
 		else if ( !is_readable( $f ) ) {
 			$ret[ 'success' ] = false;
-			$ret[ 'files' ][ $id ][ $from[ $id ] ] = $to[ $id ];
+			$ret[ 'from' ][ $id ] = $from_files[ $id ];
+			$ret[ 'to' ][ $id ] = $to_files[ $id ];
 			$ret[ 'status' ][ $id ] = 'UNREADABLE';
 			$ret[ 'info' ][ $id ] = stat( $f );
 			for( $n = 0; $n <= 12; $n++ ) unset( $ret[ 'info' ][ $id ][ $n ] );
@@ -256,7 +265,8 @@ class Upload {
 			$ret[ 'status' ][ $id ] = 'FAIL';
 			$ret[ 'success' ] = false;
 		}
-		$ret[ 'files' ][ $id ][ $from[ $id ] ] = $to[ $id ];
+		$ret[ 'from' ][ $id ] = $from_files[ $id ];
+		$ret[ 'to' ][ $id ] = $to_files[ $id ];
 		$ret[ 'data' ][ $id ] = curl_multi_getcontent( $c );
 		$ret[ 'info' ][ $id ] = $info[ $id ];
 		curl_multi_remove_handle( $mh, $c );

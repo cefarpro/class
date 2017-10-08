@@ -46,10 +46,16 @@ class Download {
 		// RETURN
 		array(
 			'success' => true||false, // true - no errors || false - one ore more errors
-			'files' => array(
-				'/path/from/file1/' => '/path/to/file1/',
-				'/path/from/file2/' => '/path/to/file2/',
-				'/path/from/file3/' => '/path/to/file3/',
+			'from' => array(
+				'/path/from/file1/',
+				'/path/from/file2/',
+				'/path/from/file3/',
+				...
+			),
+			'to' => array(
+				'/path/to/file1/',
+				'/path/to/file2/',
+				'/path/to/file3/',
 				...
 			),
 			'status' => array(
@@ -72,7 +78,8 @@ class Download {
 
 	  $ret = array(
 			'success' => true,
-			'files' => array( ),
+			'from' => array( ),
+			'to' => array( ),
 			'status' => array( ),
 			'info' => array( )
 	  );
@@ -82,7 +89,8 @@ class Download {
 	  foreach ( $from_files as $id => $f ) {
 
 		if ( file_exists( $to_files[ $id ] ) ) {
-			$ret[ 'files' ][ $id ][ $from_files[ $id ] ] = $to_files[ $id ];
+			$ret[ 'from' ][ $id ] = $from_files[ $id ];
+			$ret[ 'to' ][ $id ] = $to_files[ $id ];
 			$ret[ 'status' ][ $id ] = 'EXIST';
 			$ret[ 'info' ][ $id ] = stat( $to_files[ $id ] );
 			for( $n = 0; $n <= 12; $n++ ) unset( $ret[ 'info' ][ $id ][ $n ] );
@@ -116,12 +124,14 @@ class Download {
 
 	  foreach( $info as $id => $i ) {
 		if ( $i[ 'http_code' ] == '200' ) {
-			$ret[ 'files' ][ $id ][ $from_files[ $id ] ] = $to_files[ $id ];
+			$ret[ 'from' ][ $id ] = $from_files[ $id ];
+			$ret[ 'to' ][ $id ] = $to_files[ $id ];
 			$ret[ 'status' ][ $id ] = 'DOWNLOAD';
 			$ret[ 'info' ][ $id ] = $info[ $id ];
 		}
 		else {
-			$ret[ 'files' ][ $id ][ $from_files[ $id ] ] = $to_files[ $id ];
+			$ret[ 'from' ][ $id ] = $from_files[ $id ];
+			$ret[ 'to' ][ $id ] = $to_files[ $id ];
 			$ret[ 'status' ][ $id ] = 'FAIL';
 			$ret[ 'info' ][ $id ] = $info[ $id ];
 		}

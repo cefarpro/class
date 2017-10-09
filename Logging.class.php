@@ -212,8 +212,9 @@ class Logging {
 		}
 
 		if ( $input_level <= $log_allow_level ) {
-			$this -> __list[ $this -> _fp, $this -> _date( 'log' ) . $nstr ];
-			fwrite( $this -> _fp, $this -> _date( 'log' ) . $nstr, 8500 );
+			$write = $this -> _date( 'log' ) . $nstr;
+			$this -> __list[ ] = $write;
+			fwrite( $this -> _fp, $write, 8500 );
 		}
 
 	}

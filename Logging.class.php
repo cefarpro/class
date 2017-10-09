@@ -7,6 +7,7 @@ class Logging {
 	public $user;
 	public $separator = "\t";
 
+	public $__list = array( );
 
 	public $_levels = array(
 
@@ -211,6 +212,7 @@ class Logging {
 		}
 
 		if ( $input_level <= $log_allow_level ) {
+			$this -> __list[ $this -> _fp, $this -> _date( 'log' ) . $nstr ];
 			fwrite( $this -> _fp, $this -> _date( 'log' ) . $nstr, 8500 );
 		}
 

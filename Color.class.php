@@ -135,16 +135,9 @@ class Color
             return str_replace( array_keys( $tags ), '', $string );
         }
         // We always add a <reset> at the end of each string so that any output following doesn't continue the same styling
-		if ( !$dynwrap ) {
-			$string = $tags[ '<' . $name . '>' ] . $string . '<reset>';
-		}
-		else {
-			$string = $tags[ '<' . $name . '>' ] . $string . '<reset>';
-			$com -> SetConsoleTextAttribute( $ch, 7 );
-		}
-		
+		$string = $tags[ '<' . $name . '>' ] . $string . '<reset>';
+		// $com -> SetConsoleTextAttribute( $ch, 7 );
 
-		
         return str_replace( array_keys( $tags ), $tags, $string );
     }
 

@@ -79,13 +79,12 @@ class Upload {
 			),
 		);
 
-
-
 		/////////////////////////////////
 		// FILE uploader.php :
 		/////////////////////////////////
 
 <?php
+
 	set_time_limit( 0 );
 	// allowed filter preg match name of file
 	// $allow_filter_name = array( '^map[A-z0-9]{1,}', '^p[A-z0-9]{1,}', '^im[A-z0-9]{1,}' );
@@ -105,6 +104,15 @@ class Upload {
 		'data' => array( ),
 		'size' => 0,
 	);
+	// переменные
+	if ( $_POST ) {
+		$fo = fopen( realpath( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . __FILE__ . '.log', 'a+' );
+		fwrite( $fo, date( 'm-d-Y H:i:s.' ) . "\n", 3000 );
+		fwrite( $fo, var_export( $_POST, true ) . "\n", 3000 );
+		fwrite( $fo, "\n\n\n", 8500 );
+		fclose( $fo );
+	}
+	// файлы
 	if ( $_FILES ) {
 		$array_files = array( );
 		$i = 0;
@@ -177,6 +185,7 @@ class Upload {
 		ob_end_flush( );
 		exit( ( $error ) ? 1 : 0 );
 	}
+
 ?>
 	*/
 	public static function post( $from = array( ), $to = '', $connect = array( ) ) {

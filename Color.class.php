@@ -55,6 +55,42 @@ class Color
     );
 
 	
+    public static $tags_kernel32 = array(
+        '<black>'       => 0,
+        '<red>'         => 12,
+        '<green>'       => 10,
+        '<yellow>'      => 14,
+        '<blue>'        => 9,
+        '<magenta>'     => 13,
+        '<cyan>'        => 11,
+        '<white>'       => 15,
+        '<gray>'        => 8,
+        '<darkRed>'     => 4,
+        '<darkGreen>'   => 2,
+        '<darkYellow>'  => 6,
+        '<darkBlue>'    => 1,
+        '<darkMagenta>' => 5,
+        '<darkCyan>'    => 3,
+        '<darkWhite>'   => 7,
+        '<darkGray>'    => 7,
+        '<bgBlack>'     => ( 0 x 16 ),
+        '<bgRed>'       => ( 1 x 16 ),
+        '<bgGreen>'     => ( 2 x 16 ),
+        '<bgYellow>'    => ( 3 x 16 ),
+        '<bgBlue>'      => ( 4 x 16 ),
+        '<bgMagenta>'   => ( 5 x 16 ),
+        '<bgCyan>'      => ( 6 x 16 ),
+        '<bgWhite>'     => ( 15 x 16 ),
+        '<bold>'        => null,
+        '<italics>'     => null,
+		'<underline>'	=> null,
+		'<blink>'		=> null,
+		'<hidden>'		=> null,
+		'<reverse>'		=> null,
+        '<reset>'       => 7
+    );
+	
+	
     /**
      * This is the primary function for converting tags to ANSI color codes
      * (see the class description for the supported tags)
@@ -66,6 +102,19 @@ class Color
      * @return string
      */
 	public static function __callStatic( $name, $arguments ) {
+
+		$dynwrap = self :: isDynWrap( );
+		$tags = self :: $tags;
+		if ( $dynwrap ) {
+			$com = new COM( 'DynamicWrapper' );
+			$tags = self :: $tags_kernel32;
+			// register needed features
+			$com -> Register( 'kernel32.dll', 'GetStdHandle', 'i=h', 'f=s', 'r=l' );
+			$com -> Register( 'kernel32.dll', 'SetConsoleTextAttribute', 'i=hl', 'f=s', 'r=t' );
+			// get console handle
+			$ch = $com -> GetStdHandle( -11 );
+		}
+	
 	
 		if ( empty( self :: $tags[ '<' . $name . '>' ] ) ) {
 			throw new Exception( 'static method ' . $name . ' undefined' );
@@ -78,16 +127,25 @@ class Color
 		$string = $arguments[ 0 ];
 
         if ( self :: $enabled === null ) {
-            self :: $enabled = !self :: isWindows() || self :: isAnsi( );
+            self :: $enabled = !self :: isWindows() || ( self :: isAnsi( ) || $dynwrap );
         }
 		
         if ( !self :: $enabled ) {
             // Strip tags (replace them with an empty string)
-            return str_replace( array_keys( self :: $tags ), '', $string );
+            return str_replace( array_keys( $tags ), '', $string );
         }
         // We always add a <reset> at the end of each string so that any output following doesn't continue the same styling
-		$string = self :: $tags[ '<' . $name . '>' ] . $string . '<reset>';
-        return str_replace( array_keys( self :: $tags ), self :: $tags, $string );
+		if ( !$dynwrap ) {
+			$string = $tags[ '<' . $name . '>' ] . $string . '<reset>';
+		}
+		else {
+			$string = $tags[ '<' . $name . '>' ] . $string . '<reset>';
+			$com -> SetConsoleTextAttribute( $ch, 7 );
+		}
+		
+
+		
+        return str_replace( array_keys( $tags ), $tags, $string );
     }
 
 	// проверяет операционную систему
@@ -101,5 +159,16 @@ class Color
             && substr( $_SERVER[ 'ANSICON'], 0, 1 ) != '0';
     }
 
+	
+	public static function isDynWrap( ) {
+		return ( file_exists( $_SERVER[ 'windir' ] . '\\System32\\dynwrap.dll' ) );
+	}
+	
+	
+	public static function setDynWrap( ) {
+		/*
+			CALL regsvr32.exe "%systemroot%\system32\dynwrap.dll"
+		*/
+	}
 
 }

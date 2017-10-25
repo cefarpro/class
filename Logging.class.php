@@ -219,8 +219,8 @@ class Logging {
 		//////////////////////////1111111111111111111111
 		if ( Color :: isDynWrap( ) ) {
 			////////////////////////////////////////////////// WIDNWOS DINWRAP KERNEL32
-			$nstr = $this -> display( $this -> _date( 'display' ) . $nstr, $level );
-			$ex_nstr = explode( '<r__k32>7</r__k32>', $nstr );
+			$dstr = $this -> display( $this -> _date( 'display' ) . $nstr, $level );
+			$ex_nstr = explode( '<r__k32>7</r__k32>', $dstr );
 			foreach( $ex_nstr as $e_nstr ) {
 				$ex = preg_split( "/(<b__k32>|<c__k32>)/", $e_nstr );
 				$k32 = 0;

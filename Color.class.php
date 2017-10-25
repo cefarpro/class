@@ -53,41 +53,41 @@ class Color
 		'<reverse>'		=> "\033[7m",
         '<reset>'       => "\033[0m"
     );
-
+	
 	
     public static $tags_kernel32 = array(
-        '<black>'       => 0,
-        '<red>'         => 12,
-        '<green>'       => 10,
-        '<yellow>'      => 14,
-        '<blue>'        => 9,
-        '<magenta>'     => 13,
-        '<cyan>'        => 11,
-        '<white>'       => 15,
-        '<gray>'        => 8,
-        '<darkRed>'     => 4,
-        '<darkGreen>'   => 2,
-        '<darkYellow>'  => 6,
-        '<darkBlue>'    => 1,
-        '<darkMagenta>' => 5,
-        '<darkCyan>'    => 3,
-        '<darkWhite>'   => 7,
-        '<darkGray>'    => 7,
-        '<bgBlack>'     => ( 0 x 16 ),
-        '<bgRed>'       => ( 1 x 16 ),
-        '<bgGreen>'     => ( 2 x 16 ),
-        '<bgYellow>'    => ( 3 x 16 ),
-        '<bgBlue>'      => ( 4 x 16 ),
-        '<bgMagenta>'   => ( 5 x 16 ),
-        '<bgCyan>'      => ( 6 x 16 ),
-        '<bgWhite>'     => ( 15 x 16 ),
-        '<bold>'        => null,
-        '<italics>'     => null,
-		'<underline>'	=> null,
-		'<blink>'		=> null,
-		'<hidden>'		=> null,
-		'<reverse>'		=> null,
-        '<reset>'       => 7
+        '<black>'       => '<c__k32>' . 0 . '</c__k32>',
+        '<red>'         => '<c__k32>' . 13 . '</c__k32>',
+        '<green>'       => '<c__k32>' . 10 . '</c__k32>',
+        '<yellow>'      => '<c__k32>' . 11 . '</c__k32>',
+        '<blue>'        => '<c__k32>' . 12 . '</c__k32>',
+        '<magenta>'     => '<c__k32>' . 13 . '</c__k32>',
+        '<cyan>'        => '<c__k32>' . 14 . '</c__k32>',
+        '<white>'       => '<c__k32>' . 15 . '</c__k32>',
+        '<gray>'        => '<c__k32>' . 7 . '</c__k32>',
+        '<darkRed>'     => '<c__k32>' . 1 . '</c__k32>',
+        '<darkGreen>'   => '<c__k32>' . 2 . '</c__k32>',
+        '<darkYellow>'  => '<c__k32>' . 3 . '</c__k32>',
+        '<darkBlue>'    => '<c__k32>' . 4 . '</c__k32>',
+        '<darkMagenta>' => '<c__k32>' . 5 . '</c__k32>',
+        '<darkCyan>'    => '<c__k32>' . 6 . '</c__k32>',
+        '<darkWhite>'   => '<c__k32>' . 7 . '</c__k32>',
+        '<darkGray>'    => '<c__k32>' . 8 . '</c__k32>',
+        '<bgBlack>'     => '<b__k32>' . 0 . '</b__k32>',
+        '<bgRed>'       => '<b__k32>' . 16 . '</b__k32>',
+        '<bgGreen>'     => '<b__k32>' . 32 . '</b__k32>',
+        '<bgYellow>'    => '<b__k32>' . 48 . '</b__k32>',
+        '<bgBlue>'      => '<b__k32>' . 64 . '</b__k32>',
+        '<bgMagenta>'   => '<b__k32>' . 80 . '</b__k32>',
+        '<bgCyan>'      => '<b__k32>' . 96 . '</b__k32>',
+        '<bgWhite>'     => '<b__k32>' . 240 . '</b__k32>',
+        '<bold>'        => '<b__k32>' . null . '</b__k32>',
+        '<italics>'     => '<b__k32>' . null . '</b__k32>',
+		'<underline>'	=> '<b__k32>' . null . '</b__k32>',
+		'<blink>'		=> '<b__k32>' . null . '</b__k32>',
+		'<hidden>'		=> '<b__k32>' . null . '</b__k32>',
+		'<reverse>'		=> '<b__k32>' . null . '</b__k32>',
+        '<reset>'       => '<r__k32>' . 7 . '</r__k32>'
     );
 	
 	
@@ -106,13 +106,7 @@ class Color
 		$dynwrap = self :: isDynWrap( );
 		$tags = self :: $tags;
 		if ( $dynwrap ) {
-			$com = new COM( 'DynamicWrapper' );
 			$tags = self :: $tags_kernel32;
-			// register needed features
-			$com -> Register( 'kernel32.dll', 'GetStdHandle', 'i=h', 'f=s', 'r=l' );
-			$com -> Register( 'kernel32.dll', 'SetConsoleTextAttribute', 'i=hl', 'f=s', 'r=t' );
-			// get console handle
-			$ch = $com -> GetStdHandle( -11 );
 		}
 	
 	
@@ -154,7 +148,7 @@ class Color
 
 	
 	public static function isDynWrap( ) {
-		return ( file_exists( $_SERVER[ 'windir' ] . '\\System32\\dynwrap.dll' ) );
+		return ( file_exists( $_SERVER[ 'windir' ] . '\\System32\\dynwrap.dll' ) && file_exists( $_SERVER[ 'windir' ] . '\\System32\\kernel32.dll' ) );
 	}
 	
 	

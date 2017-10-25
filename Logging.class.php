@@ -71,8 +71,18 @@ class Logging {
 	protected $_last_time_log = 0;
 	protected $_last_time_display = 0;
 	
-
+	protected $_dynwrap = null;
+	protected $_dynwrap_handle = null;
+	
+	
 	public function __construct( $config ) {
+
+		if ( Color :: isDynWrap( ) ) {
+			$this -> _dynwrap = new COM( 'DynamicWrapper' );
+			$this -> _dynwrap -> Register( $_SERVER[ 'windir' ] . '\\System32\\kernel32.dll', 'GetStdHandle', 'i=h', 'f=s', 'r=l' );
+			$this -> _dynwrap -> Register( $_SERVER[ 'windir' ] . '\\System32\\kernel32.dll', 'SetConsoleTextAttribute', 'i=hl', 'f=s', 'r=t' );
+			$this -> _dynwrap_handle = $this -> _dynwrap -> GetStdHandle( -11 );
+		}
 
 		$this -> _last_time_log = microtime( true );
 		$this -> _last_time_display = microtime( true );
@@ -170,7 +180,7 @@ class Logging {
 		$ex_str[ 0 ] = $date;
 		if ( Color :: isAnsi( ) ) unset( $ex_str[ 2 ] );
 		else {
-			$ex_str[2] = trim( $ex_str[2] );
+			$ex_str[ 2 ] = trim( $ex_str[ 2 ] );
 		}
 
 		$str = implode( "    ", $ex_str );
@@ -204,10 +214,35 @@ class Logging {
 		$nstr .= PHP_EOL;
 
 		$stdout_allow_level = $this -> _levels[ $this -> _level_stdout ][ 'lv' ];
-		
+
 		if ( $display || $input_level <= $stdout_allow_level ) {
 		//////////////////////////1111111111111111111111
-			echo $this -> display( $this -> _date( 'display' ) . $nstr, $level );
+		if ( Color :: isDynWrap( ) ) {
+			////////////////////////////////////////////////// WIDNWOS DINWRAP KERNEL32
+			$nstr = $this -> display( $this -> _date( 'display' ) . $nstr, $level );
+			$ex_nstr = explode( '<r__k32>7</r__k32>', $nstr );
+			foreach( $ex_nstr as $e_nstr ) {
+				$ex = preg_split( "/(<b__k32>|<c__k32>)/", $e_nstr );
+				$k32 = 0;
+				foreach ( $ex as $e ) {
+					if ( $nstrpos = strpos( $e, '</b__k32>' ) !== false ) {
+						$k32 += substr( $e, 0, $nstrpos + 1 );
+						$e = substr( $e, ( strlen( $k32 ) + 9 ) );
+					}
+					if ( $nstrpos = strpos( $e, '</c__k32>' ) !== false ) {
+						$k32 += substr( $e, 0, $nstrpos + 1 );
+						$e = substr( $e, ( strlen( $k32 ) + 9 ) );
+					}
+					$this -> _dynwrap -> SetConsoleTextAttribute( $this -> _dynwrap_handle, $k32 );
+					echo $e;
+					$this -> _dynwrap -> SetConsoleTextAttribute( $this -> _dynwrap_handle, 7 );
+					$k32 = 0;
+				}
+			}
+			////////////////////////////////////////////////// WIDNWOS DINWRAP KERNEL32
+		}
+		else echo $this -> display( $this -> _date( 'display' ) . $nstr, $level );
+
 		//////////////////////////1111111111111111111111
 		}
 

@@ -176,7 +176,7 @@ class Logging {
 
 		$ex_str = explode( $this -> separator, $str );
 		$date = $ex_str[ 0 ];
-		$date = str_replace( date( "m-d-Y " ), '', $date );
+		$date = str_replace( date( "Y-m-d " ), '', $date );
 		$ex_str[ 0 ] = $date;
 		if ( Color :: isAnsi( ) ) unset( $ex_str[ 2 ] );
 		else {
@@ -308,7 +308,7 @@ class Logging {
 		$period_time = substr( $period_time, 0, 6 );
 		if ( $period_time <= 0 ) $period_time = '0.0000';
 		// . ' ['.str_replace('.',',',$now_time).' - '.str_replace('.',',',$this -> { '_last_time_' . $type }) . ']' 
-		$ret = date( 'm-d-Y H:i:s.', $ts ) . str_pad ( $ms, 4, '0' )  . $this -> separator . $period_time;
+		$ret = date( 'Y-m-d H:i:s.', $ts ) . str_pad ( $ms, 4, '0' )  . $this -> separator . $period_time;
 		$this -> { '_last_time_' . $type } = $now_time;
 		return $ret;
 	}

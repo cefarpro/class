@@ -216,34 +216,25 @@ class Logging {
 		$stdout_allow_level = $this -> _levels[ $this -> _level_stdout ][ 'lv' ];
 
 		if ( $display || $input_level <= $stdout_allow_level ) {
-		//////////////////////////1111111111111111111111
+		////////////////////////////////////////////////// WIDNWOS DINWRAP KERNEL32
 		if ( Color :: isDynWrap( ) ) {
-			////////////////////////////////////////////////// WIDNWOS DINWRAP KERNEL32
 			$dstr = $this -> display( $this -> _date( 'display' ) . $nstr, $level );
-			$ex_nstr = explode( '<r__k32>7</r__k32>', $dstr );
-			foreach( $ex_nstr as $e_nstr ) {
-				$ex = preg_split( "/(<b__k32>|<c__k32>)/", $e_nstr );
-				$k32 = 0;
-				foreach ( $ex as $e ) {
-					if ( $nstrpos = strpos( $e, '</b__k32>' ) !== false ) {
-						$k32 += substr( $e, 0, $nstrpos + 1 );
-						$e = substr( $e, ( strlen( $k32 ) + 9 ) );
+			preg_match_all( '/<__k32_([0-9]{1,}|reset)>/si', $dstr, $match );
+			if ( isset( $match[ 0 ] ) && isset( $match[ 1 ] ) && count( $match[ 0 ] ) && count( $match[ 1 ] ) ) {
+				$ex = preg_split( "/(" . implode( '|', $match[ 0 ] ) . ")/", $dstr );
+				foreach ( $ex as $k => $e ) {
+					if ( $k > 0 ) {
+						$m = $match[ 1 ][ $k - 1 ];
+						//var_dump( $m );
+						if ( $m == 'reset' ) $m = 7;
+						$this -> _dynwrap -> SetConsoleTextAttribute( $this -> _dynwrap_handle, $m );
 					}
-					if ( $nstrpos = strpos( $e, '</c__k32>' ) !== false ) {
-						$k32 += substr( $e, 0, $nstrpos + 1 );
-						$e = substr( $e, ( strlen( $k32 ) + 9 ) );
-					}
-					$this -> _dynwrap -> SetConsoleTextAttribute( $this -> _dynwrap_handle, $k32 );
 					echo $e;
-					$this -> _dynwrap -> SetConsoleTextAttribute( $this -> _dynwrap_handle, 7 );
-					$k32 = 0;
 				}
 			}
-			////////////////////////////////////////////////// WIDNWOS DINWRAP KERNEL32
 		}
+		////////////////////////////////////////////////// WIDNWOS DINWRAP KERNEL32
 		else echo $this -> display( $this -> _date( 'display' ) . $nstr, $level );
-
-		//////////////////////////1111111111111111111111
 		}
 
 		if ( $input_level <= $log_allow_level ) {
@@ -258,19 +249,34 @@ class Logging {
 	public function style( $str='', $level='SUCCESS' ) {
 
 		if ( isset( $this -> _levels[ $level ] ) ) {
-		
+			$color = false;
+			$bg = false;
+			$d = false;
+			$s = 0;
+			if ( Color :: isDynWrap( ) ) $d = true;
 			foreach ( $this -> _levels[ $level ] as $key => $style ) {
 				if ( $key == 'lv' ) continue;
 				else if ( $key == 'bgcolor' ) {
+					$bg = true;
 					$method = 'bg' . strtoupper( substr( $style, 0, 1 ) ) . substr( $style, 1 );
-					$str = Color :: $method( $str );
+					if ( !$d ) $str = Color :: $method( $str );
+					else $s += Color :: $tags_kernel32[ '<' . $method . '>' ];
 				}
 				else if ( $key == 'color' ) {
-					$str = Color :: $style( $str );
+					$color = true;
+					if ( !$d ) $str = Color :: $style( $str );
+					else {
+						$s += Color :: $tags_kernel32[ '<' . $style . '>' ];
+					}
 				}
 				else {
 					if ( $style ) $str = Color :: $key( $str );
 				}
+			}
+			if ( $d ) {
+				if ( !$color && !$bg ) $s = 7;
+				$str = trim( $str );
+				$str = '<__k32_' . $s . '>' . $str . Color :: $tags_kernel32[ '<reset>' ] . PHP_EOL;
 			}
 		}
 

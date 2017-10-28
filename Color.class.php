@@ -56,38 +56,38 @@ class Color
 	
 	
     public static $tags_kernel32 = array(
-        '<black>'       => '<c__k32>' . 0 . '</c__k32>',
-        '<red>'         => '<c__k32>' . 13 . '</c__k32>',
-        '<green>'       => '<c__k32>' . 10 . '</c__k32>',
-        '<yellow>'      => '<c__k32>' . 11 . '</c__k32>',
-        '<blue>'        => '<c__k32>' . 12 . '</c__k32>',
-        '<magenta>'     => '<c__k32>' . 13 . '</c__k32>',
-        '<cyan>'        => '<c__k32>' . 14 . '</c__k32>',
-        '<white>'       => '<c__k32>' . 15 . '</c__k32>',
-        '<gray>'        => '<c__k32>' . 7 . '</c__k32>',
-        '<darkRed>'     => '<c__k32>' . 1 . '</c__k32>',
-        '<darkGreen>'   => '<c__k32>' . 2 . '</c__k32>',
-        '<darkYellow>'  => '<c__k32>' . 3 . '</c__k32>',
-        '<darkBlue>'    => '<c__k32>' . 4 . '</c__k32>',
-        '<darkMagenta>' => '<c__k32>' . 5 . '</c__k32>',
-        '<darkCyan>'    => '<c__k32>' . 6 . '</c__k32>',
-        '<darkWhite>'   => '<c__k32>' . 7 . '</c__k32>',
-        '<darkGray>'    => '<c__k32>' . 8 . '</c__k32>',
-        '<bgBlack>'     => '<b__k32>' . 0 . '</b__k32>',
-        '<bgRed>'       => '<b__k32>' . 16 . '</b__k32>',
-        '<bgGreen>'     => '<b__k32>' . 32 . '</b__k32>',
-        '<bgYellow>'    => '<b__k32>' . 48 . '</b__k32>',
-        '<bgBlue>'      => '<b__k32>' . 64 . '</b__k32>',
-        '<bgMagenta>'   => '<b__k32>' . 80 . '</b__k32>',
-        '<bgCyan>'      => '<b__k32>' . 96 . '</b__k32>',
-        '<bgWhite>'     => '<b__k32>' . 240 . '</b__k32>',
-        '<bold>'        => '<b__k32>' . null . '</b__k32>',
-        '<italics>'     => '<b__k32>' . null . '</b__k32>',
-		'<underline>'	=> '<b__k32>' . null . '</b__k32>',
-		'<blink>'		=> '<b__k32>' . null . '</b__k32>',
-		'<hidden>'		=> '<b__k32>' . null . '</b__k32>',
-		'<reverse>'		=> '<b__k32>' . null . '</b__k32>',
-        '<reset>'       => '<r__k32>' . 7 . '</r__k32>'
+        '<black>'       => 0,
+        '<red>'         => 13,
+        '<green>'       => 10,
+        '<yellow>'      => 11,
+        '<blue>'        => 12,
+        '<magenta>'     => 13,
+        '<cyan>'        => 14,
+        '<white>'       => 15,
+        '<gray>'        => 7,
+        '<darkRed>'     => 1,
+        '<darkGreen>'   => 2,
+        '<darkYellow>'  => 3,
+        '<darkBlue>'    => 4,
+        '<darkMagenta>' => 5,
+        '<darkCyan>'    => 6,
+        '<darkWhite>'   => 7,
+        '<darkGray>'    => 8,
+        '<bgBlack>'     => 0,
+        '<bgRed>'       => 16,
+        '<bgGreen>'     => 32,
+        '<bgYellow>'    => 48,
+        '<bgBlue>'      => 64,
+        '<bgMagenta>'   => 80,
+        '<bgCyan>'      => 96,
+        '<bgWhite>'     => 240,
+        '<bold>'        => 7,
+        '<italics>'     => 7,
+		'<underline>'	=> 7,
+		'<blink>'		=> 7,
+		'<hidden>'		=> 7,
+		'<reverse>'		=> 7,
+        '<reset>'       => '<__k32_reset>'
     );
 	
 	
@@ -103,13 +103,6 @@ class Color
      */
 	public static function __callStatic( $name, $arguments ) {
 
-		$dynwrap = self :: isDynWrap( );
-		$tags = self :: $tags;
-		if ( $dynwrap ) {
-			$tags = self :: $tags_kernel32;
-		}
-	
-	
 		if ( empty( self :: $tags[ '<' . $name . '>' ] ) ) {
 			throw new Exception( 'static method ' . $name . ' undefined' );
 		}
@@ -121,7 +114,7 @@ class Color
 		$string = $arguments[ 0 ];
 
         if ( self :: $enabled === null ) {
-            self :: $enabled = !self :: isWindows() || ( self :: isAnsi( ) || $dynwrap );
+            self :: $enabled = !self :: isWindows() || ( self :: isAnsi( ) );
         }
 		
         if ( !self :: $enabled ) {

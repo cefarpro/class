@@ -15,7 +15,7 @@ class Logging {
 
 											'lv'		=> 0,
 											'color'		=> 'black',
-											'bgcolor'	=> 'while'
+											'bgcolor'	=> 'white'
 
 										),
 

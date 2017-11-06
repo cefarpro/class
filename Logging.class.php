@@ -22,8 +22,8 @@ class Logging {
 									'ERROR'		=> array(
 
 											'lv'		=> 1,
-											'color'		=> 'gray',
-											'bgcolor'	=> 'red'
+											'color'		=> 'darkGreen',
+											'bgcolor'	=> 'yellow',
 
 										),
 
@@ -36,7 +36,8 @@ class Logging {
 										),
 
 									'INFO'		=> array(
-
+											//'color'		=> 'darkGreen',
+											'color'		=> 'cyan',
 											'lv'		=> 3
 
 									),
@@ -51,8 +52,7 @@ class Logging {
 									'DEBUG'		=>  array(
 
 											'lv'		=> 5,
-											'color'		=> 'cyan'
-
+											'color'		=> 'darkGray'
 										),
 								);
 

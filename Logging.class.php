@@ -22,8 +22,8 @@ class Logging {
 									'ERROR'		=> array(
 
 											'lv'		=> 1,
-											'color'		=> 'darkGreen',
-											'bgcolor'	=> 'yellow',
+											'color'		=> 'gray',
+											'bgcolor'	=> 'red',
 
 										),
 

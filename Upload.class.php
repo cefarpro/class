@@ -79,6 +79,8 @@ class Upload {
 			),
 		);
 
+
+
 		/////////////////////////////////
 		// FILE uploader.php :
 		/////////////////////////////////
@@ -86,6 +88,46 @@ class Upload {
 <?php
 
 	set_time_limit( 0 );
+
+	$r = array(
+		's' => true,
+		'code' => 200,
+		'errors' => array( ),
+		'message' => 'OK',
+		'data' => array( ),
+		'size' => 0,
+	);
+
+	//////////////////////////////////////////////
+	// Basic Auth
+	//
+
+	$users = array( 'user' => 'password' );
+	$realm = 'Uploaded point';
+	
+	$valid_users = array_keys( $users );
+	$auth = ( isset( $_SERVER[ 'HTTP_AUTHORIZATION' ] ) ) ? $_SERVER[ 'HTTP_AUTHORIZATION' ] : $_SERVER[ 'REDIRECT_HTTP_AUTHORIZATION' ];
+	list( $_SERVER[ 'PHP_AUTH_USER' ], $_SERVER[ 'PHP_AUTH_PW' ] ) = explode( ':', base64_decode( substr( $auth, 6 ) ) );
+	
+	$user = $_SERVER[ 'PHP_AUTH_USER' ];
+	$pass = $_SERVER[ 'PHP_AUTH_PW' ];
+	$validated = ( in_array( $user, $valid_users ) ) && ( $pass == $users[ $user ] );
+	if ( !$validated ) {
+		header( 'WWW-Authenticate: Basic realm="' . $realm . '"' );
+		header( 'HTTP/1.1 401 Unauthorized' );
+		$r[ 's' ] = false;
+		$r[ 'code' ] = 401;
+		$r[ 'errors' ][ 0 ] = 'Not authorized';
+		$r[ 'message' ] = 'Not authorized';
+		$r[ 'location' ] = __LINE__;
+		header( 'Content-type: application/json' );
+		echo json_encode( $r );
+		ob_end_flush( );
+		exit( 1 );
+	}
+
+	//////////////////////////////////////////////
+
 	// allowed filter preg match name of file
 	// $allow_filter_name = array( '^map[A-z0-9]{1,}', '^p[A-z0-9]{1,}', '^im[A-z0-9]{1,}' );
 	$allow_filter_name = array( );
@@ -96,14 +138,7 @@ class Upload {
 		$uploaddir = realpath( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'files' . DIRECTORY_SEPARATOR . 'catalog' . DIRECTORY_SEPARATOR . 'upload';
 	} else $uploaddir = $_GET[ 'uploaddir' ];
 
-	$r = array(
-		's' => true,
-		'code' => 200,
-		'errors' => array( ),
-		'message' => 'OK',
-		'data' => array( ),
-		'size' => 0,
-	);
+
 	// переменные
 	if ( $_POST ) {
 		$fo = fopen( realpath( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . __FILE__ . '.log', 'a+' );
@@ -186,6 +221,7 @@ class Upload {
 		exit( ( $error ) ? 1 : 0 );
 	}
 
+	
 ?>
 	*/
 	public static function post( $from = array( ), $to = '', $connect = array( ) ) {
@@ -231,6 +267,19 @@ class Upload {
 
 		$curly[ $id ] = curl_init( );
 
+/*
+							'target_url' => 'http://bigmoda74.ru/cmsu/',
+							'headers' => array(
+								'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13',
+							),
+							'auth' => array(
+								'method' => 'Basic Auth',
+								'user' => 'user',
+								'password' => 'LHIGF33_dDs5sSSbd00'
+							)
+*/
+
+		
 		$mime = finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $f );
 		$filename = basename( $f );
 		if ( ( version_compare( PHP_VERSION, '5.5' ) >= 0 ) ) {
@@ -251,8 +300,16 @@ class Upload {
 		curl_setopt( $curly[ $id ], CURLOPT_ENCODING, 'gzip' );
 		curl_setopt( $curly[ $id ], CURLOPT_POSTFIELDS, $post );
 		curl_setopt( $curly[ $id ], CURLOPT_RETURNTRANSFER, true );
-		//curl_setopt( $ch, CURLINFO_HEADER_OUT, true );
+		// А У Т Е Н Т И Ф И КА Ц И Я
+		if ( isset( $connect[ 'auth' ][ 'method' ] ) ) {
+			// Б А З О В А Я
+			if ( $connect[ 'auth' ][ 'method' ] == 'Basic Auth' ) {
+				curl_setopt( $curly[ $id ], CURLOPT_HTTPAUTH, CURLAUTH_BASIC );
+				curl_setopt( $curly[ $id ], CURLOPT_USERPWD, $connect[ 'auth' ][ 'user' ] . ':' . $connect[ 'auth' ][ 'password' ] );
+			}
+		}
 
+		//curl_setopt( $ch, CURLINFO_HEADER_OUT, true );
 		// extra options?
 		if ( isset( $connect[ 'options' ] ) ) curl_setopt_array( $curly[ $id ], $connect[ 'options' ] );
 		curl_multi_add_handle( $mh, $curly[ $id ] );

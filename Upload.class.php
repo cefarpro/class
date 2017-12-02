@@ -267,19 +267,6 @@ class Upload {
 
 		$curly[ $id ] = curl_init( );
 
-/*
-							'target_url' => 'http://bigmoda74.ru/cmsu/',
-							'headers' => array(
-								'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13',
-							),
-							'auth' => array(
-								'method' => 'Basic Auth',
-								'user' => 'user',
-								'password' => 'LHIGF33_dDs5sSSbd00'
-							)
-*/
-
-		
 		$mime = finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $f );
 		$filename = basename( $f );
 		if ( ( version_compare( PHP_VERSION, '5.5' ) >= 0 ) ) {

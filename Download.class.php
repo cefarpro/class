@@ -71,7 +71,7 @@ class Download {
 			)
 		)
 	*/
-	public static function get( $from_files = array( ), $to_files = array( ), $merge = false, $filter = array( ) ) {
+	public static function get_files( $from_files = array( ), $to_files = array( ), $merge = false, $filter = array( ) ) {
 
 	  $curly = array( );
 	  $info = array( );

@@ -141,10 +141,12 @@ class Upload {
 
 	// переменные
 	if ( $_POST ) {
-		$fo = fopen( realpath( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . __FILE__ . '.log', 'a+' );
-		fwrite( $fo, date( 'm-d-Y H:i:s.' ) . "\n", 3000 );
-		fwrite( $fo, var_export( $_POST, true ) . "\n", 3000 );
-		fwrite( $fo, "\n\n\n", 8500 );
+		$fo = fopen( realpath( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'post.log', 'a+' );
+		$content = date( 'm-d-Y H:i:s' ) . "\n";
+		$content .= var_export( $_POST, true ) . "\n";
+		$content .= "\n\n\n";
+		$len = strlen( $content );
+		fwrite( $fo, $content, $len );
 		fclose( $fo );
 	}
 	// файлы
@@ -224,7 +226,11 @@ class Upload {
 	
 ?>
 	*/
-	public static function post( $from = array( ), $to = '', $connect = array( ) ) {
+
+
+
+	// ЗАГРУЖАЕМ ФАЙЛЫ МУЛЬТИКУРЛОМ
+	public static function post_files( $from = array( ), $to = '', $connect = array( ) ) {
 
 	  $headers = array( 'Content-Type: multipart/form-data' ); // cURL headers for file uploading
 	  $curly = array( );
@@ -267,6 +273,19 @@ class Upload {
 
 		$curly[ $id ] = curl_init( );
 
+/*
+							'target_url' => 'http://bigmoda74.ru/cmsu/',
+							'headers' => array(
+								'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13',
+							),
+							'auth' => array(
+								'method' => 'Basic Auth',
+								'user' => 'user',
+								'password' => 'XXXXX'
+							)
+*/
+
+		
 		$mime = finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $f );
 		$filename = basename( $f );
 		if ( ( version_compare( PHP_VERSION, '5.5' ) >= 0 ) ) {
@@ -333,6 +352,118 @@ class Upload {
 	}
 
 
+	
+	// ЗАГРУЖАЕМ ДАННЫЕ МУЛЬТИКУРЛОМ 
+	public static function post_data( $data, $connect = array( ) ) {
+
+	  $headers = array( );
+	  $curly = array( );
+	  $ret = array(
+			'success' => true,
+			'to' => array( ),
+			'status' => array( ),
+			'data' => array( ),
+			'info' => array( ),
+	  );
+
+	  // multi handle
+	  $mh = curl_multi_init( );
+
+	  // loop through $data and create curl handles
+	  // then add them to the multi-handle
+	  foreach ( $data as $id => $d ) {
+	 
+		$curly[ $id ] = curl_init( );
+
+		if ( isset( $connect[ 'headers' ] ) && is_array( $connect[ 'headers' ] ) && count( $connect[ 'headers' ] ) ) $headers = array_merge( $headers, $connect[ 'headers' ] );		
+		curl_setopt( $curly[ $id ], CURLOPT_URL, $connect[ 'target_url' ] );
+		curl_setopt( $curly[ $id ], CURLOPT_HEADER,         false );
+		curl_setopt( $curly[ $id ], CURLOPT_RETURNTRANSFER, true );
+		curl_setopt( $curly[ $id ], CURLOPT_HTTPHEADER, $headers );
+		// post?
+		if ( is_array( $d ) ) {
+		  if ( !empty( $d[ 'post' ] ) ) {
+			curl_setopt( $curly[ $id ], CURLOPT_POST,       1 );
+			curl_setopt( $curly[ $id ], CURLOPT_POSTFIELDS, $d[ 'post' ] );
+		  }
+		}
+
+		curl_setopt( $curly[ $id ], CURLOPT_FOLLOWLOCATION, true );
+		curl_setopt( $curly[ $id ], CURLOPT_SSL_VERIFYPEER, false );
+		curl_setopt( $curly[ $id ], CURLOPT_SSL_VERIFYHOST, false );
+		
+		// А У Т Е Н Т И Ф И КА Ц И Я
+		if ( isset( $connect[ 'auth' ][ 'method' ] ) ) {
+			// Б А З О В А Я
+			if ( $connect[ 'auth' ][ 'method' ] == 'Basic Auth' ) {
+				curl_setopt( $curly[ $id ], CURLOPT_HTTPAUTH, CURLAUTH_BASIC );
+				curl_setopt( $curly[ $id ], CURLOPT_USERPWD, $connect[ 'auth' ][ 'user' ] . ':' . $connect[ 'auth' ][ 'password' ] );
+			}
+		}
+
+		// extra options?
+		if ( isset( $connect[ 'options' ] ) ) curl_setopt_array( $curly[ $id ], $connect[ 'options' ] );
+	 
+		curl_multi_add_handle( $mh, $curly[ $id ] );
+	  }
+	 
+	  // execute the handles
+	  $running = null;
+	  do {
+		curl_multi_exec( $mh, $running );
+	  } while( $running > 0 );
+	 
+	 
+	  // get content and remove handles
+	  foreach( $curly as $id => $c ) {
+		$ret[ $id ] = curl_multi_getcontent( $c );
+		curl_multi_remove_handle( $mh, $c );
+	  }
+
+	  // get content and remove handles
+	  foreach( $curly as $id => $c ) {
+		$info[ $id ] = curl_getinfo( $c );
+		if ( $info[ $id ][ 'http_code'  ] == 200 ) {
+			$ret[ 'status' ][ $id ] = 'UPLOAD';
+		}
+		else {
+			$ret[ 'status' ][ $id ] = 'FAIL';
+			$ret[ 'success' ] = false;
+		}
+		$ret[ 'to' ][ $id ] = $connect[ 'target_url' ] . ' < @POST ' . basename( $from[ $id ] );
+		$ret[ 'data' ][ $id ] = curl_multi_getcontent( $c );
+		$ret[ 'info' ][ $id ] = $info[ $id ];
+		curl_multi_remove_handle( $mh, $c );
+	  }
+
+	  // all done
+	  curl_multi_close( $mh );
+
+	  return $ret;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	/**
 	SLOWLY 1.11
 	*/

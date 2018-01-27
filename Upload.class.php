@@ -143,7 +143,7 @@ class Upload {
 	if ( $_POST ) {
 		$fo = fopen( realpath( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'post.log', 'a+' );
 		$content = date( 'm-d-Y H:i:s' ) . "\n";
-		$content .= var_export( $_POST, true ) . "\n";
+		$content = var_export( $_POST[ 'json' ], true ) . "\n";
 		$content .= "\n\n\n";
 		$len = strlen( $content );
 		fwrite( $fo, $content, $len );
@@ -229,11 +229,6 @@ class Upload {
 
 
 
-	
-	
-	
-	
-	
 	// ЗАГРУЖАЕМ ФАЙЛЫ МУЛЬТИКУРЛОМ
 	public static function post_files( $from = array( ), $to = '', $connect = array( ) ) {
 
@@ -277,7 +272,7 @@ class Upload {
 		$post = array( );
 
 		$curly[ $id ] = curl_init( );
-
+		
 		$mime = finfo_file( finfo_open( FILEINFO_MIME_TYPE ), $f );
 		$filename = basename( $f );
 		if ( ( version_compare( PHP_VERSION, '5.5' ) >= 0 ) ) {
@@ -324,6 +319,7 @@ class Upload {
 		$info[ $id ] = curl_getinfo( $c );
 		if ( $info[ $id ][ 'http_code'  ] == 200 ) {
 			$ret[ 'status' ][ $id ] = 'UPLOAD';
+			$ret[ 'success' ] = true;
 		}
 		else {
 			$ret[ 'status' ][ $id ] = 'FAIL';
@@ -417,6 +413,7 @@ class Upload {
 		$info[ $id ] = curl_getinfo( $c );
 		if ( $info[ $id ][ 'http_code'  ] == 200 ) {
 			$ret[ 'status' ][ $id ] = 'UPLOAD';
+			$ret[ 'success' ] = true;
 		}
 		else {
 			$ret[ 'status' ][ $id ] = 'FAIL';

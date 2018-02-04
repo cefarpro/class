@@ -119,13 +119,13 @@ class Color
 		
         if ( !self :: $enabled ) {
             // Strip tags (replace them with an empty string)
-            return str_replace( array_keys( $tags ), '', $string );
+            return str_replace( array_keys( self :: $tags ), '', $string );
         }
         // We always add a <reset> at the end of each string so that any output following doesn't continue the same styling
-		$string = $tags[ '<' . $name . '>' ] . $string . '<reset>';
+		$string = self :: $tags[ '<' . $name . '>' ] . $string . '<reset>';
 		// $com -> SetConsoleTextAttribute( $ch, 7 );
 
-        return str_replace( array_keys( $tags ), $tags, $string );
+        return str_replace( array_keys( self :: $tags ), self :: $tags, $string );
     }
 
 	// проверяет операционную систему

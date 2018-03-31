@@ -855,7 +855,10 @@ class Os {
 	}
 
 
-
+	// Ноды, Физ.ядра, Лог.Ядра
+	// wmic cpu get NumberOfCores, NumberOfEnabledCore, NumberOfLogicalProcessors
+	
+	
 
 
 	/**

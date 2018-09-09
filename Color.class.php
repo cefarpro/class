@@ -141,7 +141,7 @@ class Color
 
 	
 	public static function isDynWrap( ) {
-		return ( file_exists( $_SERVER[ 'windir' ] . '\\System32\\dynwrap.dll' ) && file_exists( $_SERVER[ 'windir' ] . '\\System32\\kernel32.dll' ) );
+		return ( isset( $_SERVER[ 'windir' ] ) && file_exists( $_SERVER[ 'windir' ] . '\\System32\\dynwrap.dll' ) && file_exists( $_SERVER[ 'windir' ] . '\\System32\\kernel32.dll' ) );
 	}
 	
 	

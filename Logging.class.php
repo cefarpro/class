@@ -93,7 +93,8 @@ class Logging {
 
 
 		if ( isset( $config[ 'to_file' ] ) ) {
-			Os :: create_dirs_form_path( $config[ 'to_file' ], PATH_DB );
+			$path_db = ( defined( 'PATH_DB' ) ) ? PATH_DB : '';
+			Os :: create_dirs_form_path( $config[ 'to_file' ], $path_db );
 			$this -> _filename = $config[ 'to_file' ];
 		}
 		else {
